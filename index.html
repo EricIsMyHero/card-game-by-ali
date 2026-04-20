@@ -1,128 +1,166 @@
 <!DOCTYPE html>
-<html lang="az">
-<head> 
-  <meta charset="UTF-8"> 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-  <title>Clash-A-Mana</title> 
-  <link rel="stylesheet" href="styles.css"> 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"> 
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Card Battle Advanced</title>
+<style>
+body {
+  font-family: Arial;
+  background: #111;
+  color: #fff;
+  text-align: center;
+}
+h1 { margin-top: 20px; }
+.container { margin-top: 20px; }
+.cards {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+.card {
+  width: 120px;
+  height: 150px;
+  background: #222;
+  border: 2px solid #555;
+  padding: 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.card:hover { background: #333; }
+.stats { margin-top: 10px; }
+button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+</style>
 </head>
 <body>
-  <div class="wrap" id="main-content">
-    <section class="main-menu" id="main-menu">
-      <h1>Clash-A-Mana: Real-Time Test Arena</h1>
-      <div class="menu-buttons">
-        <button id="show-cards-btn">Cards</button>
-        <button id="show-spells-btn">Spells</button>
-        <button id="show-boosters-btn">Powerups</button>
-        <button id="show-towers-btn">Tower defences</button>
-        <button id="show-info-btn">Info</button>
-      </div>
-    </section>
-    
-    <!-- Info Section -->
-    <section id="info-section" class="hidden">
-      <header class="card-title-header">
-        <div>
-          <h1>Info</h1>
-        </div>
-        <button id="back-to-menu-from-info-btn" class="back-button">Back</button>
-      </header>
-      <div id="info-content" style="padding: 20px; max-width: 800px; margin: 0 auto;">
-        <p>Məlumat yüklənir...</p>
-      </div>
-    </section>
-    
-    <section id="cards-section" class="hidden">
-      <header class="card-title-header">
-        <div>
-          <h1>Cards – Visual demo</h1>
-          <div class="hint">
-            Burada oyunda olacaq bütün kartların ilkin demosu vardır. Unutmayın sadəcə bir DEMO-dur.
-          </div>
-        </div>
-        <button id="back-to-menu-btn" class="back-button">Back</button>
-        <button id="open-team-builder-btn" class="back-button" style="background: #22284f; color: var(--text);">Komandanı Göstər (0/8)</button>
-      </header>
-      
-      <div id="cards-layout-wrapper"> 
-        <div id="team-builder-panel" class="hidden">
-            <h2>Team Summary</h2>
-            <div id="selected-team-cards" class="team-cards-list">
-                <p id="placeholder-text">Komandaya heç bir kart əlavə edilməyib.</p>
-            </div>
-            <div class="stats-summary">
-                <p>Total Health: <span id="total-health">0</span></p>
-                <p>Total Shield: <span id="total-shield">0</span></p>
-                <p>Total Damage: <span id="total-damage">0</span></p>
-                <p>Total DPS: <span id="total-dps">0</span></p>
-                <p>Total Mana: <span id="total-mana">0</span></p>
-                <p>Recycle: <span id="cheapest-recycle-cost">0</span></p>
-            </div>
-            <button id="clear-team-btn">Komandanı Təmizlə</button>
-            <button id="close-team-builder-btn" style="margin-top: 10px;">Kartlara Qayıt</button>
-        </div>
-        
-        <div id="cards-wrapper"> 
-          <div class="controls">
-            <button id="filter-all" class="active">All Cards</button>
-            <button id="filter-mundane">Mundane</button>
-            <button id="filter-familiar">Familiar</button>
-            <button id="filter-arcane">Arcane</button>
-            <button id="filter-relic">Relic</button>
-            <button id="filter-ascendant">Ascendant</button>
-            <button id="filter-apex">Apex</button>
-            <button id="filter-ethereal">Ethereal</button>
-            <input type="text" id="search-input" placeholder="Kart adını axtar..." 
-            style=" background: #22284f; color: var(--text);
-                    border: 1px solid #2f3769; border-radius: 12px;
-                    padding: 10px 14px;
-                    box-shadow: var(--shadow);
-                    flex-grow: 1; 
-                    max-width: 300px;
-            ">
-          </div>
-          <section class="grid" id="cards"></section>
-        </div>
-      </div>
-    </section>
 
-    <!-- Spells Section -->
-    <section id="spells-section" class="hidden">
-      <header class="card-title-header">
-        <div>
-          <h1>Spells – Büyülər</h1>
-          <div class="hint">
-            Bütün büyülərin ilkin demosu. İki kateqoriya vardır: <b>Building</b> (bina) və <b>Normal</b> (adi büyülər).
-          </div>
-        </div>
-        <button id="back-to-menu-from-spells-btn" class="back-button">Back</button>
-      </header>
+<h1>Card Battle</h1>
 
-      <div id="spells-wrapper">
-        <div class="controls" id="spells-controls">
-          <button id="spell-filter-all" class="active">All</button>
-          <button id="spell-filter-normal">Normal</button>
-          <button id="spell-filter-building">Building</button>
-          <span class="spell-separator">|</span>
-          <button id="spell-rarity-all" class="active">All Rarities</button>
-          <button id="spell-rarity-common">Common</button>
-          <button id="spell-rarity-epic">Epic</button>
-          <button id="spell-rarity-legendary">Legendary</button>
-          <input type="text" id="spell-search-input" placeholder="Büyü adını axtar..."
-            style=" background: #22284f; color: var(--text);
-                    border: 1px solid #2f3769; border-radius: 12px;
-                    padding: 10px 14px;
-                    box-shadow: var(--shadow);
-                    flex-grow: 1; 
-                    max-width: 300px;
-            ">
-        </div>
-        <section class="grid" id="spells-grid"></section>
-      </div>
-    </section>
+<div class="container">
+  <p>Your HP: <span id="playerHP">100</span></p>
+  <p>AI HP: <span id="aiHP">100</span></p>
 
-  </div>
-  <script src="script.js"></script>
+  <div class="cards" id="cards"></div>
+
+  <p id="log">Choose a card</p>
+
+<button onclick="startGame()">Restart</button>
+
+</div>
+
+<script>
+let playerHP, aiHP, playerCards;
+
+const baseCards = [
+  { attack: 10, shield: 5, heal: 0, crit: 0.2 },
+  { attack: 20, shield: 0, heal: 0, crit: 0.1 },
+  { attack: 5, shield: 10, heal: 5, crit: 0.3 },
+  { attack: 15, shield: 3, heal: 0, crit: 0.25 },
+  { attack: 8, shield: 8, heal: 2, crit: 0.2 }
+];
+
+function startGame() {
+  playerHP = 100;
+  aiHP = 100;
+  playerCards = JSON.parse(JSON.stringify(baseCards));
+  document.getElementById("log").innerText = "Choose a card";
+  updateUI();
+  renderCards();
+}
+
+function renderCards() {
+  const container = document.getElementById("cards");
+  container.innerHTML = "";
+
+  playerCards.forEach((c, i) => {
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `
+      ATK: ${c.attack}<br>
+      SHD: ${c.shield}<br>
+      HEAL: ${c.heal}<br>
+      CRIT: ${Math.floor(c.crit * 100)}%
+    `;
+    div.onclick = () => playTurn(i);
+    container.appendChild(div);
+  });
+}
+
+function applyCrit(attack, crit) {
+  if (Math.random() < crit) {
+    return attack * 1.5;
+  }
+  return attack;
+}
+
+function calculateDamage(damage, shield) {
+  let blocked = Math.min(shield, damage * 0.7);
+  return damage - blocked;
+}
+
+function aiChooseCard() {
+  // sadə ağıllı seçim
+  if (aiHP < 30) {
+    return { attack: 5, shield: 10, heal: 10, crit: 0.2 };
+  }
+  return baseCards[Math.floor(Math.random() * baseCards.length)];
+}
+
+function playTurn(index) {
+  const playerCard = playerCards[index];
+  const aiCard = aiChooseCard();
+
+  // Heal
+  playerHP += playerCard.heal;
+  aiHP += aiCard.heal;
+
+  // Attack + crit
+  let pAtk = applyCrit(playerCard.attack, playerCard.crit);
+  let aAtk = applyCrit(aiCard.attack, aiCard.crit);
+
+  // Damage
+  let dmgToAI = calculateDamage(pAtk, aiCard.shield);
+  let dmgToPlayer = calculateDamage(aAtk, playerCard.shield);
+
+  aiHP -= dmgToAI;
+  playerHP -= dmgToPlayer;
+
+  playerCards.splice(index, 1);
+
+  document.getElementById("log").innerText =
+    `You: ${Math.floor(pAtk)} dmg | AI: ${Math.floor(aAtk)} dmg`;
+
+  updateUI();
+
+  if (playerHP <= 0 || aiHP <= 0 || playerCards.length === 0) {
+    endGame();
+  } else {
+    renderCards();
+  }
+}
+
+function updateUI() {
+  document.getElementById("playerHP").innerText = Math.max(0, Math.floor(playerHP));
+  document.getElementById("aiHP").innerText = Math.max(0, Math.floor(aiHP));
+}
+
+function endGame() {
+  let result = "Draw!";
+  if (playerHP > aiHP) result = "You Won!";
+  if (aiHP > playerHP) result = "You Lost!";
+
+  document.getElementById("log").innerText = result;
+  document.getElementById("cards").innerHTML = "";
+}
+
+startGame();
+</script>
+
 </body>
 </html>
