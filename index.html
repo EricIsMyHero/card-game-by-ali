@@ -260,6 +260,39 @@
     min-height: 34px;
     color: #888;
   }
+
+  /* played cards this turn */
+  .played-row {
+    padding: 7px 10px;
+    background: #1a1a1a;
+    border: 1px solid #2a3a1a;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    min-height: 32px;
+    color: #7cc452;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .played-row .plbl { color: #555; font-size: 10px; font-weight: bold; letter-spacing:.04em; margin-right: 2px; }
+  .played-tag {
+    background: #1e3010;
+    border: 1px solid #3a5a20;
+    color: #7cc452;
+    border-radius: 5px;
+    padding: 1px 7px;
+    font-size: 11px;
+  }
+
+  /* recharge button */
+  .gbtn.recharge {
+    background: #1a2800;
+    border-color: #4a7a10;
+    color: #7cc452;
+  }
+  .gbtn.recharge:hover { background: #243600; }
   .log-box {
     padding: 8px 11px;
     background: #1a1a1a;
@@ -379,11 +412,13 @@
     <div class="hand-lbl">ƏLİNDƏKİ KARTLAR</div>
     <div class="hand" id="hand"></div>
 
+    <div class="played-row" id="playedRow"><span class="plbl">BU TUR:</span><span id="playedList" style="color:#555">heç bir kart oynanmadı</span></div>
     <div class="ai-row" id="aiRow">AI gözləyir...</div>
     <div class="log-box" id="logBox">Kart seçin!</div>
 
     <div class="btn-row">
-      <button class="gbtn" onclick="nextTurn()">Növbəti tur →</button>
+      <button class="gbtn" onclick="endTurn()">Turu bitir →</button>
+      <button class="gbtn recharge" onclick="rechargeSkip()">⚡ Enerji yenilə (+4)</button>
       <button class="gbtn" onclick="goToDeck()">Deck dəyiş</button>
     </div>
   </div>
@@ -465,6 +500,8 @@ let pHP, aHP, energy, turn, playerDeck, hand, deckIdx;
 let pPoison, aPoison, pPoisonDmg, aPoisonDmg;
 let pDebuff, aDebuff, pBuffNext, aBuffNext;
 let turnsPlayed;
+let playedThisTurn = []; /* bu turda oynanan kartlar */
+let turnsBlocked = false; /* kart oynayarkən blok */
 
 /* ═══════════════════════════════════════════════════
    HELPERS
@@ -594,9 +631,11 @@ function updateStartBtn() {
 ═══════════════════════════════════════════════════ */
 function startBattle() {
   pHP = 100; aHP = 100;
-  energy = 3; turn = 1; turnsPlayed = 0;
+  energy = 4; turn = 1; turnsPlayed = 0;
   pPoison = 0; aPoison = 0; pPoisonDmg = 0; aPoisonDmg = 0;
   pDebuff = 0; aDebuff = 0; pBuffNext = 0;  aBuffNext = 0;
+  playedThisTurn = [];
+  turnsBlocked   = false;
 
   const deckCards = selectedDeck.map(id => ALL_CARDS.find(c => c.id === id));
   playerDeck = shuffle(deckCards);
@@ -606,7 +645,7 @@ function startBattle() {
 
   show("battleScreen");
   renderBattle();
-  document.getElementById("logBox").innerHTML  = "Kart seçin!";
+  document.getElementById("logBox").innerHTML  = "Kart seçin! Bir turda istədiyiniz qədər kart oynaya bilərsiniz.";
   document.getElementById("aiRow").textContent = "AI hazırdır...";
 }
 
@@ -621,89 +660,176 @@ function drawCards(n) {
 }
 
 /* ═══════════════════════════════════════════════════
-   BATTLE — TURN LOGIC
+   BATTLE — END TURN (oyunçu turunu bitirir, AI oynayır)
 ═══════════════════════════════════════════════════ */
-function nextTurn() {
-  if (pHP <= 0 || aHP <= 0) return;
-  turn++;
-  energy = Math.min(10, energy + 1);
+function endTurn() {
+  if (pHP <= 0 || aHP <= 0 || turnsBlocked) return;
+  turnsBlocked = true;
 
-  const msgs = [];
-  if (pPoison > 0) { pHP -= pPoisonDmg; pPoison--; msgs.push(`Sən: zəhər -${pPoisonDmg}HP`); }
-  if (aPoison > 0) { aHP -= aPoisonDmg; aPoison--; msgs.push(`AI: zəhər -${aPoisonDmg}HP`); }
+  /* AI öz enerjisi qədər kart oynayır */
+  let aiEnergy = energy; /* AI-nin enerjisi oyunçu ilə eynidir (ədalətli) */
+  const aiPlayed = [];
+  let aiAttempts = 0;
+  while (aiEnergy > 0 && aiAttempts < 10) {
+    const c = aiChooseWithCost(aiEnergy);
+    if (!c) break;
+    aiEnergy -= c.cost;
+    aiPlayed.push(c);
+    aiAttempts++;
+  }
 
-  drawCards(1);
-  document.getElementById("logBox").innerHTML  = msgs.length ? msgs.join(" | ") : `Tur ${turn} — +1 enerji, yeni kart!`;
-  document.getElementById("aiRow").textContent = "AI gözləyir...";
-  checkEnd();
+  /* AI kartlarını ardıcıl oynayır (animasiyalı) */
+  runAiCards(aiPlayed, 0, () => {
+    /* AI bitdi — yeni tur başlayır */
+    turn++;
+    energy = Math.min(10, energy + 2);
+
+    /* poison tick */
+    const msgs = [];
+    if (pPoison > 0) { pHP -= pPoisonDmg; pPoison--; if(pPoison===0)pPoisonDmg=0; msgs.push(`Sən: zəhər -${pPoisonDmg||''}HP`); }
+    if (aPoison > 0) { aHP -= aPoisonDmg; aPoison--; if(aPoison===0)aPoisonDmg=0; msgs.push(`AI: zəhər -${aPoisonDmg||''}HP`); }
+
+    aHP = Math.max(0, aHP);
+    pHP = Math.max(0, pHP);
+
+    drawCards(1);
+    playedThisTurn = [];
+    turnsBlocked   = false;
+
+    if (msgs.length) {
+      document.getElementById("logBox").innerHTML = msgs.join(" | ");
+    } else {
+      document.getElementById("logBox").innerHTML = `Tur ${turn} başladı — +2 enerji, yeni kart!`;
+    }
+
+    checkEnd();
+    renderBattle();
+    renderPlayedRow();
+  });
+}
+
+function runAiCards(cards, idx, done) {
+  if (idx >= cards.length) { done(); return; }
+  const c = cards[idx];
+  applyCardEffect(null, c);  /* player card = null → AI oynayır */
+  const row = document.getElementById("aiRow");
+  row.textContent = `AI oynadı: ${c.name}  ATK:${c.atk}  SHD:${c.shd}  HEAL:${c.heal}`;
   renderBattle();
+  setTimeout(() => runAiCards(cards, idx + 1, done), 600);
+}
+
+/* enerji yenilə — tur keçir, +4 enerji qazanırsan, AI da oynayır */
+function rechargeSkip() {
+  if (pHP <= 0 || aHP <= 0 || turnsBlocked) return;
+  turnsBlocked = true;
+
+  document.getElementById("logBox").innerHTML = `<span style="color:#7cc452">Enerji yenilənir... AI oynayır</span>`;
+
+  /* AI oynayır */
+  let aiEnergy = energy + 4;
+  const aiPlayed = [];
+  let aiAttempts = 0;
+  while (aiEnergy > 0 && aiAttempts < 10) {
+    const c = aiChooseWithCost(aiEnergy);
+    if (!c) break;
+    aiEnergy -= c.cost;
+    aiPlayed.push(c);
+    aiAttempts++;
+  }
+
+  runAiCards(aiPlayed, 0, () => {
+    turn++;
+    energy = Math.min(10, energy + 4);
+
+    const msgs = [];
+    if (pPoison > 0) { pHP -= pPoisonDmg; pPoison--; msgs.push(`Zəhər -${pPoisonDmg}HP`); }
+    if (aPoison > 0) { aHP -= aPoisonDmg; aPoison--; }
+    aHP = Math.max(0, aHP); pHP = Math.max(0, pHP);
+
+    drawCards(1);
+    playedThisTurn = [];
+    turnsBlocked   = false;
+
+    document.getElementById("logBox").innerHTML =
+      `<span style="color:#7cc452">+4 enerji qazandın!</span>${msgs.length ? " | " + msgs.join(", ") : ""} Tur ${turn}`;
+
+    checkEnd();
+    renderBattle();
+    renderPlayedRow();
+  });
 }
 
 function playCard(idx, el) {
   const c = hand[idx];
   if (c.cost > energy) { flashLog("Enerji kifayət deyil!"); return; }
-  if (pHP <= 0 || aHP <= 0) return;
+  if (pHP <= 0 || aHP <= 0 || turnsBlocked) return;
 
   el.classList.add("play-anim");
+  turnsBlocked = true;
 
   setTimeout(() => {
-    energy   -= c.cost;
+    energy -= c.cost;
     turnsPlayed++;
+    playedThisTurn.push(c.name);
 
-    const aiC = aiChoose();
-
-    /* attack hesabla */
-    let pAtk = c.atk   * (1 + pBuffNext); pBuffNext = 0;
-    let aAtk = aiC.atk * (1 + aBuffNext); aBuffNext = 0;
-
-    if (Math.random() < c.crit)   pAtk *= 1.5;
-    if (Math.random() < aiC.crit) aAtk *= 1.5;
-
-    aAtk *= (1 - pDebuff); pDebuff = 0;
-    pAtk *= (1 - aDebuff); aDebuff = 0;
-
-    const shA = Math.min(aiC.shd, pAtk * .6);
-    const shP = Math.min(c.shd,   aAtk * .6);
-    const dAI = Math.max(0, pAtk - shA);
-    const dP  = Math.max(0, aAtk - shP);
-
-    /* heal əvvəl */
-    aHP += aiC.heal;
-    pHP += c.heal;
-
-    /* damage */
-    aHP = Math.max(0, aHP - dAI);
-    pHP = Math.max(0, pHP - dP);
-
-    /* poison */
-    if (c.poison   > 0) { aPoison = c.poison;   aPoisonDmg = Math.floor(c.poison); }
-    if (aiC.poison > 0) { pPoison = aiC.poison;  pPoisonDmg = Math.floor(aiC.poison); }
-
-    /* buff / debuff */
-    if (c.buffNext   > 0) pBuffNext = c.buffNext;
-    if (aiC.buffNext > 0) aBuffNext = aiC.buffNext;
-    if (c.debuff     > 0) aDebuff   = c.debuff;
-    if (aiC.debuff   > 0) pDebuff   = aiC.debuff;
-
-    /* log */
-    const parts = [];
-    if (dAI  > 0) parts.push(`<span class="hit">AI -${Math.floor(dAI)}HP</span>`);
-    if (c.heal > 0) parts.push(`<span class="heal-t">+${c.heal}HP</span>`);
-    if (dP   > 0) parts.push(`<span class="hit">Sən -${Math.floor(dP)}HP</span>`);
-    if (aiC.heal > 0) parts.push(`<span class="heal-t">AI +${aiC.heal}HP</span>`);
-    if (c.poison > 0) parts.push(`☠ zəhər (${c.poison}t)`);
-
-    document.getElementById("logBox").innerHTML = `${c.name} vs ${aiC.name} — ${parts.join(", ")}`;
-    document.getElementById("aiRow").textContent = `AI oynadı: ${aiC.name}  ATK:${aiC.atk}  SHD:${aiC.shd}  HEAL:${aiC.heal}`;
-
-    showHPPop(Math.floor(dAI), false);
-    showHPPop(Math.floor(dP),  true);
+    /* yalnız oyunçunun kartı tətbiq olunur — AI tur sonunda oynayır */
+    applyPlayerCard(c);
 
     hand.splice(idx, 1);
     drawCards(1);
+    turnsBlocked = false;
+
     checkEnd();
     renderBattle();
+    renderPlayedRow();
   }, 320);
+}
+
+/* oyunçunun kartının effekti */
+function applyPlayerCard(c) {
+  let pAtk = c.atk * (1 + pBuffNext); pBuffNext = 0;
+  if (Math.random() < c.crit) pAtk *= 1.5;
+  const shA = Math.min(0, 0); /* AI-nin shield yoxdur bu momentdə */
+  const dAI = Math.max(0, pAtk);
+
+  pHP += c.heal;
+  aHP  = Math.max(0, aHP - dAI);
+
+  if (c.poison   > 0) { aPoison = c.poison;  aPoisonDmg = Math.floor(c.poison); }
+  if (c.buffNext > 0) pBuffNext = c.buffNext;
+  if (c.debuff   > 0) aDebuff   = c.debuff;
+
+  const parts = [];
+  if (dAI    > 0) parts.push(`<span class="hit">AI -${Math.floor(dAI)}HP</span>`);
+  if (c.heal > 0) parts.push(`<span class="heal-t">+${c.heal}HP</span>`);
+  if (c.buffNext > 0) parts.push(`<span style="color:#afa9ec">növbəti +${Math.round(c.buffNext*100)}%</span>`);
+  if (c.debuff   > 0) parts.push(`<span style="color:#ef9f27">AI zəiflər -${Math.round(c.debuff*100)}%</span>`);
+  if (c.poison   > 0) parts.push(`☠ ${c.poison}t`);
+
+  document.getElementById("logBox").innerHTML =
+    `<b>${c.name}</b> oynadıldı — ${parts.join(", ")||"effekt yoxdur"}`;
+  showHPPop(Math.floor(dAI), false);
+}
+
+/* AI kartının effektini tətbiq et (tur sonunda) */
+function applyCardEffect(playerCard, aiC) {
+  let aAtk = aiC.atk * (1 + aBuffNext); aBuffNext = 0;
+  if (Math.random() < aiC.crit) aAtk *= 1.5;
+  aAtk *= (1 - pDebuff); pDebuff = 0;
+
+  const shP = Math.min(0, 0);
+  const dP  = Math.max(0, aAtk);
+
+  aHP += aiC.heal;
+  pHP  = Math.max(0, pHP - dP);
+
+  if (aiC.poison   > 0) { pPoison = aiC.poison;  pPoisonDmg = Math.floor(aiC.poison); }
+  if (aiC.buffNext > 0) aBuffNext = aiC.buffNext;
+  if (aiC.debuff   > 0) pDebuff   = aiC.debuff;
+
+  showHPPop(Math.floor(dP), true);
+  aHP = Math.max(0, aHP);
+  pHP = Math.max(0, pHP);
 }
 
 function flashLog(msg) {
@@ -713,10 +839,11 @@ function flashLog(msg) {
 }
 
 /* ═══════════════════════════════════════════════════
-   AI
+   AI — enerjiyə görə kart seçir
 ═══════════════════════════════════════════════════ */
-function aiChoose() {
-  const pool = shuffle(ALL_CARDS).slice(0, 6);
+function aiChooseWithCost(availEnergy) {
+  const pool = shuffle(ALL_CARDS).filter(c => c.cost <= availEnergy);
+  if (!pool.length) return null;
   if (aHP < 25) { const h = pool.find(c => c.type === "heal");   if (h) return h; }
   if (aHP < 45) { const s = pool.find(c => c.type === "shield"); if (s) return s; }
   if (turn > 7)  return pool.sort((a,b) => b.atk - a.atk)[0];
@@ -724,6 +851,8 @@ function aiChoose() {
     (b.atk + b.shd*.5 + b.heal*.3) - (a.atk + a.shd*.5 + a.heal*.3)
   )[0];
 }
+
+function aiChoose() { return aiChooseWithCost(10); }
 
 /* ═══════════════════════════════════════════════════
    END CHECK
@@ -768,6 +897,7 @@ function renderBattle() {
   }
 
   renderHand();
+  renderPlayedRow();
 }
 
 function renderHand() {
@@ -792,6 +922,17 @@ function renderHand() {
     if (can) div.onclick = () => playCard(i, div);
     h.appendChild(div);
   });
+}
+
+function renderPlayedRow() {
+  const list = document.getElementById("playedList");
+  if (!playedThisTurn.length) {
+    list.innerHTML = `<span style="color:#555">heç bir kart oynanmadı</span>`;
+    return;
+  }
+  list.innerHTML = playedThisTurn.map(n =>
+    `<span class="played-tag">${n}</span>`
+  ).join(" ");
 }
 
 /* ═══════════════════════════════════════════════════
