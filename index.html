@@ -406,9 +406,10 @@
     <div class="log-box" id="logBox">Kart seçin!</div>
 
     <div class="btn-row">
-      <button class="gbtn" onclick="endTurn()">Turu bitir</button>
-      <button class="gbtn" onclick="goToDeck()">Deck dəyiş</button>
-    </div>
+    <button class="gbtn" style="background:#8B0000;color:#fff" onclick="endTurn()">Turu bitir</button>
+    <button class="gbtn" onclick="skipTurnForEnergy()">+4 Enerji (tur keç)</button>
+    <button class="gbtn" onclick="goToDeck()">Deck dəyiş</button>
+</div>
   </div>
 
   <!-- RESULT SCREEN -->
@@ -704,6 +705,24 @@ function runAiCards(cards, idx, done) {
   setTimeout(() => runAiCards(cards, idx + 1, done), 600);
 }
 
+ /* ENERGY BUTTONS */
+
+
+function skipTurnForEnergy() {
+  if (turnsBlocked) return;
+
+  turnsBlocked = true;
+  energy += 4;
+
+  document.getElementById("logBox").innerHTML = "Tur keçildi, +4 enerji qazandın";
+
+  setTimeout(() => {
+    turn++;
+    turnsBlocked = false;
+    renderBattle();
+  }, 400);
+}
+ 
 /* END TURN */
 function endTurn() {
   if (pHP <= 0 || aHP <= 0 || turnsBlocked) return;
@@ -721,7 +740,7 @@ function endTurn() {
 
     document.getElementById("aiRow").textContent = "AI düşünür...";
 
-    let aiEnergy = 4; // Rəqibin enerjisi hər zaman sabit 4 olur.
+    let aiEnergy = 4;
     const aiPlayed = [];
     let aiAttempts = 0;
     while (aiEnergy > 0 && aiAttempts < 10) {
@@ -730,7 +749,7 @@ function endTurn() {
       
       aiEnergy -= c.cost;
       const cardIndex = aiHand.indexOf(c);
-      aiHand.splice(cardIndex, 1); // Seçilmiş kartı AI-nin əlindən silir.
+      aiHand.splice(cardIndex, 1);
       
       aiPlayed.push(c);
       aiAttempts++;
@@ -740,7 +759,8 @@ function endTurn() {
       if (pHP <= 0) { checkEnd(); return; }
 
       turn++;
-      energy = 4; // Sizin enerjiniz sıfırlanır və yenidən sabit 4 olur.
+
+      energy += 2; // hər tur +2 enerji
 
       const msgs = [];
       if (pPoison > 0) { pHP -= pPoisonDmg; pPoison--; if(pPoison===0)pPoisonDmg=0; msgs.push(`Sən: zəhər -${pPoisonDmg||''}HP`); }
@@ -755,11 +775,9 @@ function endTurn() {
       playedThisTurn = [];
       turnsBlocked   = false;
 
-      if (msgs.length) {
-        document.getElementById("logBox").innerHTML = msgs.join(" | ");
-      } else {
-        document.getElementById("logBox").innerHTML = `Tur ${turn} başladı! Enerji yeniləndi.`;
-      }
+      document.getElementById("logBox").innerHTML = msgs.length
+        ? msgs.join(" | ")
+        : `Tur ${turn} başladı! +2 enerji gəldi.`;
 
       document.getElementById("aiRow").textContent = "AI gözləyir...";
 
