@@ -18,11 +18,11 @@
     padding: 16px;
   }
 
-  /* ── SCREENS ── */
+  /* SCREENS */
   .screen { display: none; }
   .screen.active { display: block; }
 
-  /* ── DECK BUILDER ── */
+  /* DECK BUILDER */
   .deck-header {
     display: flex;
     align-items: center;
@@ -138,7 +138,7 @@
   .start-btn:hover    { opacity: .85; }
   .start-btn:disabled { opacity: .35; cursor: not-allowed; }
 
-  /* ── BATTLE HUD ── */
+  /* BATTLE HUD */
   .hud {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -202,7 +202,7 @@
     margin-bottom: 8px;
   }
 
-  /* ── GAME CARDS ── */
+  /* GAME CARDS */
   .gcard {
     width: 100px;
     background: #1e1e1e;
@@ -286,13 +286,6 @@
     font-size: 11px;
   }
 
-  /* recharge button */
-  .gbtn.recharge {
-    background: #1a2800;
-    border-color: #4a7a10;
-    color: #7cc452;
-  }
-  .gbtn.recharge:hover { background: #243600; }
   .log-box {
     padding: 8px 11px;
     background: #1a1a1a;
@@ -320,7 +313,7 @@
   }
   .gbtn:hover { background: #2a2a2a; }
 
-  /* ── DAMAGE POP ── */
+  /* DAMAGE POP */
   .dmg-pop {
     position: absolute;
     font-size: 16px;
@@ -335,7 +328,7 @@
     100% { transform: translateY(-40px); opacity: 0; }
   }
 
-  /* ── RESULT SCREEN ── */
+  /* RESULT SCREEN */
   .result-screen {
     text-align: center;
     padding: 40px 16px;
@@ -365,9 +358,7 @@
 
 <div id="root">
 
-  <!-- ═══════════════════════════════════════════
-       DECK BUILDER SCREEN
-  ═══════════════════════════════════════════ -->
+  <!-- DECK BUILDER SCREEN -->
   <div class="screen active" id="deckScreen">
     <div class="deck-header">
       <div class="deck-title">Deck qur</div>
@@ -381,9 +372,7 @@
     </button>
   </div>
 
-  <!-- ═══════════════════════════════════════════
-       BATTLE SCREEN
-  ═══════════════════════════════════════════ -->
+  <!-- BATTLE SCREEN -->
   <div class="screen" id="battleScreen">
     <div class="hud">
       <div class="hp-block">
@@ -409,7 +398,7 @@
       <div class="turn-txt" id="turnTxt">Tur 1</div>
     </div>
 
-    <div class="hand-lbl">ƏLİNDƏKİ KARTLAR</div>
+    <div class="hand-lbl">ƏLİNDƏKİ KARTLAR (Maks: 4)</div>
     <div class="hand" id="hand"></div>
 
     <div class="played-row" id="playedRow"><span class="plbl">BU TUR:</span><span id="playedList" style="color:#555">heç bir kart oynanmadı</span></div>
@@ -417,30 +406,27 @@
     <div class="log-box" id="logBox">Kart seçin!</div>
 
     <div class="btn-row">
-      <button class="gbtn" onclick="endTurn()">Turu bitir →</button>
-      <button class="gbtn recharge" onclick="rechargeSkip()">⚡ Enerji yenilə (+4)</button>
+      <button class="gbtn" onclick="endTurn()">Turu bitir</button>
       <button class="gbtn" onclick="goToDeck()">Deck dəyiş</button>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════
-       RESULT SCREEN
-  ═══════════════════════════════════════════ -->
+  <!-- RESULT SCREEN -->
   <div class="screen" id="resultScreen">
     <div class="result-screen">
       <div class="result-title" id="resultTitle">Qazandın!</div>
       <div class="result-sub"   id="resultSub"></div>
       <div class="result-stats">
         <div class="rstat">
-          <div class="rstat-val" id="rHP">—</div>
+          <div class="rstat-val" id="rHP">-</div>
           <div class="rstat-lbl">Qalan HP</div>
         </div>
         <div class="rstat">
-          <div class="rstat-val" id="rTurns">—</div>
+          <div class="rstat-val" id="rTurns">-</div>
           <div class="rstat-lbl">Tur sayı</div>
         </div>
         <div class="rstat">
-          <div class="rstat-val" id="rCards">—</div>
+          <div class="rstat-val" id="rCards">-</div>
           <div class="rstat-lbl">Əldə kart</div>
         </div>
       </div>
@@ -451,12 +437,10 @@
     </div>
   </div>
 
-</div><!-- #root -->
+</div>
 
 <script>
-/* ═══════════════════════════════════════════════════
-   DATA
-═══════════════════════════════════════════════════ */
+/* DATA */
 const ICONS = {
   attack: "⚔", heal: "💚", shield: "🛡",
   buff: "✨", debuff: "💀", poison: "☠"
@@ -468,31 +452,29 @@ const TYPE_CLS = {
 };
 
 const ALL_CARDS = [
-  { id:0,  name:"Qılınc",        type:"attack", cost:2, atk:18, shd:0,  heal:0,  crit:.20, poison:0,  buffNext:0,   debuff:0    },
-  { id:1,  name:"Dual Hücum",    type:"attack", cost:4, atk:30, shd:0,  heal:0,  crit:.25, poison:0,  buffNext:0,   debuff:0    },
-  { id:2,  name:"Oxçu",          type:"attack", cost:1, atk:10, shd:0,  heal:0,  crit:.15, poison:0,  buffNext:0,   debuff:0    },
-  { id:3,  name:"Snayper",       type:"attack", cost:3, atk:22, shd:0,  heal:0,  crit:.35, poison:0,  buffNext:0,   debuff:0    },
-  { id:4,  name:"Ninja",         type:"attack", cost:3, atk:25, shd:0,  heal:0,  crit:.40, poison:0,  buffNext:0,   debuff:0    },
-  { id:5,  name:"Həyat Seli",    type:"heal",   cost:2, atk:0,  shd:0,  heal:20, crit:0,   poison:0,  buffNext:0,   debuff:0    },
-  { id:6,  name:"Sürətli Şəfa",  type:"heal",   cost:1, atk:0,  shd:0,  heal:12, crit:0,   poison:0,  buffNext:0,   debuff:0    },
-  { id:7,  name:"Böyük Şəfa",    type:"heal",   cost:4, atk:0,  shd:0,  heal:35, crit:0,   poison:0,  buffNext:0,   debuff:0    },
-  { id:8,  name:"Healer",        type:"heal",   cost:3, atk:5,  shd:5,  heal:18, crit:.10, poison:0,  buffNext:0,   debuff:0    },
-  { id:9,  name:"Qalxan",        type:"shield", cost:2, atk:5,  shd:18, heal:0,  crit:.10, poison:0,  buffNext:0,   debuff:0    },
-  { id:10, name:"Dəmir Zireh",   type:"shield", cost:3, atk:0,  shd:28, heal:0,  crit:0,   poison:0,  buffNext:0,   debuff:0    },
-  { id:11, name:"Titan",         type:"shield", cost:5, atk:20, shd:35, heal:0,  crit:.15, poison:0,  buffNext:0,   debuff:0    },
-  { id:12, name:"Güc Ruhu",      type:"buff",   cost:2, atk:8,  shd:5,  heal:5,  crit:.10, poison:0,  buffNext:.30, debuff:0    },
-  { id:13, name:"Bərk Yumruq",   type:"buff",   cost:3, atk:15, shd:0,  heal:0,  crit:.10, poison:0,  buffNext:.50, debuff:0    },
+  { id:0,  name:"Qılınc",        type:"attack", cost:2, atk:18, shd:0,  heal:0,  crit:.20, poison:0,  buffNext:0,   debuff:0   },
+  { id:1,  name:"Dual Hücum",    type:"attack", cost:4, atk:30, shd:0,  heal:0,  crit:.25, poison:0,  buffNext:0,   debuff:0   },
+  { id:2,  name:"Oxçu",          type:"attack", cost:1, atk:10, shd:0,  heal:0,  crit:.15, poison:0,  buffNext:0,   debuff:0   },
+  { id:3,  name:"Snayper",       type:"attack", cost:3, atk:22, shd:0,  heal:0,  crit:.35, poison:0,  buffNext:0,   debuff:0   },
+  { id:4,  name:"Ninja",         type:"attack", cost:3, atk:25, shd:0,  heal:0,  crit:.40, poison:0,  buffNext:0,   debuff:0   },
+  { id:5,  name:"Həyat Seli",    type:"heal",   cost:2, atk:0,  shd:0,  heal:20, crit:0,   poison:0,  buffNext:0,   debuff:0   },
+  { id:6,  name:"Sürətli Şəfa",  type:"heal",   cost:1, atk:0,  shd:0,  heal:12, crit:0,   poison:0,  buffNext:0,   debuff:0   },
+  { id:7,  name:"Böyük Şəfa",    type:"heal",   cost:4, atk:0,  shd:0,  heal:35, crit:0,   poison:0,  buffNext:0,   debuff:0   },
+  { id:8,  name:"Healer",        type:"heal",   cost:3, atk:5,  shd:5,  heal:18, crit:.10, poison:0,  buffNext:0,   debuff:0   },
+  { id:9,  name:"Qalxan",        type:"shield", cost:2, atk:5,  shd:18, heal:0,  crit:.10, poison:0,  buffNext:0,   debuff:0   },
+  { id:10, name:"Dəmir Zireh",   type:"shield", cost:3, atk:0,  shd:28, heal:0,  crit:0,   poison:0,  buffNext:0,   debuff:0   },
+  { id:11, name:"Titan",         type:"shield", cost:5, atk:20, shd:35, heal:0,  crit:.15, poison:0,  buffNext:0,   debuff:0   },
+  { id:12, name:"Güc Ruhu",      type:"buff",   cost:2, atk:8,  shd:5,  heal:5,  crit:.10, poison:0,  buffNext:.30, debuff:0   },
+  { id:13, name:"Bərk Yumruq",   type:"buff",   cost:3, atk:15, shd:0,  heal:0,  crit:.10, poison:0,  buffNext:.50, debuff:0   },
   { id:14, name:"Büyücü",        type:"buff",   cost:4, atk:12, shd:8,  heal:8,  crit:.15, poison:3,  buffNext:.20, debuff:.10  },
-  { id:15, name:"Zəhərli Ox",    type:"poison", cost:2, atk:8,  shd:0,  heal:0,  crit:.15, poison:6,  buffNext:0,   debuff:0    },
-  { id:16, name:"Zəhər Buludu",  type:"poison", cost:3, atk:5,  shd:0,  heal:0,  crit:.10, poison:10, buffNext:0,   debuff:0    },
+  { id:15, name:"Zəhərli Ox",    type:"poison", cost:2, atk:8,  shd:0,  heal:0,  crit:.15, poison:6,  buffNext:0,   debuff:0   },
+  { id:16, name:"Zəhər Buludu",  type:"poison", cost:3, atk:5,  shd:0,  heal:0,  crit:.10, poison:10, buffNext:0,   debuff:0   },
   { id:17, name:"Zəiflik",       type:"debuff", cost:2, atk:5,  shd:0,  heal:0,  crit:.10, poison:0,  buffNext:0,   debuff:.25  },
   { id:18, name:"Qaranlıq Bağ",  type:"debuff", cost:3, atk:8,  shd:0,  heal:0,  crit:.10, poison:0,  buffNext:0,   debuff:.40  },
-  { id:19, name:"Döyüşçü",       type:"attack", cost:2, atk:14, shd:6,  heal:0,  crit:.20, poison:0,  buffNext:0,   debuff:0    },
+  { id:19, name:"Döyüşçü",       type:"attack", cost:2, atk:14, shd:6,  heal:0,  crit:.20, poison:0,  buffNext:0,   debuff:0   },
 ];
 
-/* ═══════════════════════════════════════════════════
-   STATE
-═══════════════════════════════════════════════════ */
+/* STATE */
 let selectedDeck = [];
 let activeFilter = "all";
 
@@ -500,12 +482,14 @@ let pHP, aHP, energy, turn, playerDeck, hand, deckIdx;
 let pPoison, aPoison, pPoisonDmg, aPoisonDmg;
 let pDebuff, aDebuff, pBuffNext, aBuffNext;
 let turnsPlayed;
-let playedThisTurn = []; /* bu turda oynanan kartlar */
-let turnsBlocked = false; /* kart oynayarkən blok */
+let playedThisTurn = [];
+let playerQueuedCards = [];
+let turnsBlocked = false;
 
-/* ═══════════════════════════════════════════════════
-   HELPERS
-═══════════════════════════════════════════════════ */
+/* AI STATE */
+let aiDeck, aiHand, aiDeckIdx;
+
+/* HELPERS */
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -525,14 +509,11 @@ function goToDeck() {
   renderDeckBuilder();
 }
 
-/* slot rəng köməkçiləri */
 function slotBg(t)     { return {attack:"#3d1a10",heal:"#1a3010",shield:"#0d2440",buff:"#2a1a4a",debuff:"#3a2800",poison:"#252520"}[t]||"#252520"; }
 function slotBorder(t) { return {attack:"#f0997b",heal:"#7cc452",shield:"#85b7eb",buff:"#afa9ec",debuff:"#ef9f27",poison:"#9fa09a"}[t]||"#555"; }
 function slotColor(t)  { return {attack:"#f0997b",heal:"#7cc452",shield:"#85b7eb",buff:"#afa9ec",debuff:"#ef9f27",poison:"#9fa09a"}[t]||"#aaa"; }
 
-/* ═══════════════════════════════════════════════════
-   DECK BUILDER
-═══════════════════════════════════════════════════ */
+/* DECK BUILDER */
 function renderDeckBuilder() {
   renderSlots();
   renderFilterBtns();
@@ -553,7 +534,7 @@ function renderSlots() {
       d.style.borderColor  = slotBorder(card.type);
       d.style.color        = slotColor(card.type);
       d.textContent        = card.name;
-      d.title              = `${card.name} — klik ilə çıxar`;
+      d.title              = `${card.name} - klik ilə çıxar`;
       d.onclick            = () => removeFromDeck(i);
     } else {
       d.textContent = i + 1;
@@ -622,35 +603,44 @@ function updateStartBtn() {
   const b = document.getElementById("startBtn");
   b.disabled     = n < 8;
   b.textContent  = n >= 8
-    ? "Döyüşə başla →"
+    ? "Döyüşə başla"
     : `Döyüşə başla (${n}/8 seçilib)`;
 }
 
-/* ═══════════════════════════════════════════════════
-   BATTLE — SETUP
-═══════════════════════════════════════════════════ */
+/* BATTLE SETUP */
 function startBattle() {
   pHP = 100; aHP = 100;
   energy = 4; turn = 1; turnsPlayed = 0;
   pPoison = 0; aPoison = 0; pPoisonDmg = 0; aPoisonDmg = 0;
   pDebuff = 0; aDebuff = 0; pBuffNext = 0;  aBuffNext = 0;
   playedThisTurn = [];
+  playerQueuedCards = [];
   turnsBlocked   = false;
 
+  // Oyunçu Dəstəsi
   const deckCards = selectedDeck.map(id => ALL_CARDS.find(c => c.id === id));
   playerDeck = shuffle(deckCards);
   deckIdx    = 0;
   hand       = [];
-  drawCards(4);
+  
+  // AI Dəstəsi (Təsadüfi 8 kart)
+  const allShuffled = shuffle([...ALL_CARDS]);
+  aiDeck = allShuffled.slice(0, 8);
+  aiDeckIdx = 0;
+  aiHand = [];
+
+  drawCards();
+  drawAiCards();
 
   show("battleScreen");
   renderBattle();
-  document.getElementById("logBox").innerHTML  = "Kart seçin! Bir turda istədiyiniz qədər kart oynaya bilərsiniz.";
-  document.getElementById("aiRow").textContent = "AI hazırdır...";
+  document.getElementById("logBox").innerHTML  = "Kart seçin! Növbəyə almaq üçün klikləyin.";
+  document.getElementById("aiRow").textContent = "AI gözləyir...";
 }
 
-function drawCards(n) {
-  for (let i = 0; i < n; i++) {
+function drawCards() {
+  const toDraw = 4 - hand.length; // Maksimum 4 kart çəkir
+  for (let i = 0; i < toDraw; i++) {
     if (deckIdx >= playerDeck.length) {
       playerDeck = shuffle(playerDeck);
       deckIdx    = 0;
@@ -659,106 +649,18 @@ function drawCards(n) {
   }
 }
 
-/* ═══════════════════════════════════════════════════
-   BATTLE — END TURN (oyunçu turunu bitirir, AI oynayır)
-═══════════════════════════════════════════════════ */
-function endTurn() {
-  if (pHP <= 0 || aHP <= 0 || turnsBlocked) return;
-  turnsBlocked = true;
-
-  /* AI öz enerjisi qədər kart oynayır */
-  let aiEnergy = energy; /* AI-nin enerjisi oyunçu ilə eynidir (ədalətli) */
-  const aiPlayed = [];
-  let aiAttempts = 0;
-  while (aiEnergy > 0 && aiAttempts < 10) {
-    const c = aiChooseWithCost(aiEnergy);
-    if (!c) break;
-    aiEnergy -= c.cost;
-    aiPlayed.push(c);
-    aiAttempts++;
-  }
-
-  /* AI kartlarını ardıcıl oynayır (animasiyalı) */
-  runAiCards(aiPlayed, 0, () => {
-    /* AI bitdi — yeni tur başlayır */
-    turn++;
-    energy = Math.min(10, energy + 2);
-
-    /* poison tick */
-    const msgs = [];
-    if (pPoison > 0) { pHP -= pPoisonDmg; pPoison--; if(pPoison===0)pPoisonDmg=0; msgs.push(`Sən: zəhər -${pPoisonDmg||''}HP`); }
-    if (aPoison > 0) { aHP -= aPoisonDmg; aPoison--; if(aPoison===0)aPoisonDmg=0; msgs.push(`AI: zəhər -${aPoisonDmg||''}HP`); }
-
-    aHP = Math.max(0, aHP);
-    pHP = Math.max(0, pHP);
-
-    drawCards(1);
-    playedThisTurn = [];
-    turnsBlocked   = false;
-
-    if (msgs.length) {
-      document.getElementById("logBox").innerHTML = msgs.join(" | ");
-    } else {
-      document.getElementById("logBox").innerHTML = `Tur ${turn} başladı — +2 enerji, yeni kart!`;
+function drawAiCards() {
+  const toDraw = 4 - aiHand.length; // AI üçün də maksimum 4 kart
+  for (let i = 0; i < toDraw; i++) {
+    if (aiDeckIdx >= aiDeck.length) {
+      aiDeck = shuffle(aiDeck);
+      aiDeckIdx = 0;
     }
-
-    checkEnd();
-    renderBattle();
-    renderPlayedRow();
-  });
-}
-
-function runAiCards(cards, idx, done) {
-  if (idx >= cards.length) { done(); return; }
-  const c = cards[idx];
-  applyCardEffect(null, c);  /* player card = null → AI oynayır */
-  const row = document.getElementById("aiRow");
-  row.textContent = `AI oynadı: ${c.name}  ATK:${c.atk}  SHD:${c.shd}  HEAL:${c.heal}`;
-  renderBattle();
-  setTimeout(() => runAiCards(cards, idx + 1, done), 600);
-}
-
-/* enerji yenilə — tur keçir, +4 enerji qazanırsan, AI da oynayır */
-function rechargeSkip() {
-  if (pHP <= 0 || aHP <= 0 || turnsBlocked) return;
-  turnsBlocked = true;
-
-  document.getElementById("logBox").innerHTML = `<span style="color:#7cc452">Enerji yenilənir... AI oynayır</span>`;
-
-  /* AI oynayır */
-  let aiEnergy = energy + 4;
-  const aiPlayed = [];
-  let aiAttempts = 0;
-  while (aiEnergy > 0 && aiAttempts < 10) {
-    const c = aiChooseWithCost(aiEnergy);
-    if (!c) break;
-    aiEnergy -= c.cost;
-    aiPlayed.push(c);
-    aiAttempts++;
+    aiHand.push({ ...aiDeck[aiDeckIdx++] });
   }
-
-  runAiCards(aiPlayed, 0, () => {
-    turn++;
-    energy = Math.min(10, energy + 4);
-
-    const msgs = [];
-    if (pPoison > 0) { pHP -= pPoisonDmg; pPoison--; msgs.push(`Zəhər -${pPoisonDmg}HP`); }
-    if (aPoison > 0) { aHP -= aPoisonDmg; aPoison--; }
-    aHP = Math.max(0, aHP); pHP = Math.max(0, pHP);
-
-    drawCards(1);
-    playedThisTurn = [];
-    turnsBlocked   = false;
-
-    document.getElementById("logBox").innerHTML =
-      `<span style="color:#7cc452">+4 enerji qazandın!</span>${msgs.length ? " | " + msgs.join(", ") : ""} Tur ${turn}`;
-
-    checkEnd();
-    renderBattle();
-    renderPlayedRow();
-  });
 }
 
+/* PLAYING CARDS (QUEUEING) */
 function playCard(idx, el) {
   const c = hand[idx];
   if (c.cost > energy) { flashLog("Enerji kifayət deyil!"); return; }
@@ -771,25 +673,108 @@ function playCard(idx, el) {
     energy -= c.cost;
     turnsPlayed++;
     playedThisTurn.push(c.name);
-
-    /* yalnız oyunçunun kartı tətbiq olunur — AI tur sonunda oynayır */
-    applyPlayerCard(c);
+    playerQueuedCards.push(c); 
 
     hand.splice(idx, 1);
-    drawCards(1);
     turnsBlocked = false;
 
+    document.getElementById("logBox").innerHTML = `<b>${c.name}</b> seçildi. Tətbiq etmək üçün turu bitirin.`;
     checkEnd();
     renderBattle();
     renderPlayedRow();
   }, 320);
 }
 
-/* oyunçunun kartının effekti */
+/* APPLY CARDS DURING END TURN */
+function runPlayerCards(cards, idx, done) {
+  if (idx >= cards.length || aHP <= 0 || pHP <= 0) { done(); return; }
+  const c = cards[idx];
+  applyPlayerCard(c);
+  renderBattle();
+  setTimeout(() => runPlayerCards(cards, idx + 1, done), 600);
+}
+
+function runAiCards(cards, idx, done) {
+  if (idx >= cards.length || pHP <= 0 || aHP <= 0) { done(); return; }
+  const c = cards[idx];
+  applyCardEffect(null, c); 
+  const row = document.getElementById("aiRow");
+  row.textContent = `AI oynadı: ${c.name}  ATK:${c.atk}  SHD:${c.shd}  HEAL:${c.heal}`;
+  renderBattle();
+  setTimeout(() => runAiCards(cards, idx + 1, done), 600);
+}
+
+/* END TURN */
+function endTurn() {
+  if (pHP <= 0 || aHP <= 0 || turnsBlocked) return;
+  turnsBlocked = true;
+
+  document.getElementById("logBox").innerHTML = "Sənin kartların tətbiq olunur...";
+
+  runPlayerCards(playerQueuedCards, 0, () => {
+    playerQueuedCards = [];
+
+    if (pHP <= 0 || aHP <= 0) {
+      checkEnd();
+      return;
+    }
+
+    document.getElementById("aiRow").textContent = "AI düşünür...";
+
+    let aiEnergy = 4; // Rəqibin enerjisi hər zaman sabit 4 olur.
+    const aiPlayed = [];
+    let aiAttempts = 0;
+    while (aiEnergy > 0 && aiAttempts < 10) {
+      const c = aiChooseFromHand(aiEnergy);
+      if (!c) break;
+      
+      aiEnergy -= c.cost;
+      const cardIndex = aiHand.indexOf(c);
+      aiHand.splice(cardIndex, 1); // Seçilmiş kartı AI-nin əlindən silir.
+      
+      aiPlayed.push(c);
+      aiAttempts++;
+    }
+
+    runAiCards(aiPlayed, 0, () => {
+      if (pHP <= 0) { checkEnd(); return; }
+
+      turn++;
+      energy = 4; // Sizin enerjiniz sıfırlanır və yenidən sabit 4 olur.
+
+      const msgs = [];
+      if (pPoison > 0) { pHP -= pPoisonDmg; pPoison--; if(pPoison===0)pPoisonDmg=0; msgs.push(`Sən: zəhər -${pPoisonDmg||''}HP`); }
+      if (aPoison > 0) { aHP -= aPoisonDmg; aPoison--; if(aPoison===0)aPoisonDmg=0; msgs.push(`AI: zəhər -${aPoisonDmg||''}HP`); }
+
+      aHP = Math.max(0, aHP);
+      pHP = Math.max(0, pHP);
+
+      drawCards();
+      drawAiCards();
+      
+      playedThisTurn = [];
+      turnsBlocked   = false;
+
+      if (msgs.length) {
+        document.getElementById("logBox").innerHTML = msgs.join(" | ");
+      } else {
+        document.getElementById("logBox").innerHTML = `Tur ${turn} başladı! Enerji yeniləndi.`;
+      }
+
+      document.getElementById("aiRow").textContent = "AI gözləyir...";
+
+      checkEnd();
+      renderBattle();
+      renderPlayedRow();
+    });
+  });
+}
+
+/* EFFECTS LOGIC */
 function applyPlayerCard(c) {
   let pAtk = c.atk * (1 + pBuffNext); pBuffNext = 0;
   if (Math.random() < c.crit) pAtk *= 1.5;
-  const shA = Math.min(0, 0); /* AI-nin shield yoxdur bu momentdə */
+  const shA = Math.min(0, 0); 
   const dAI = Math.max(0, pAtk);
 
   pHP += c.heal;
@@ -807,11 +792,10 @@ function applyPlayerCard(c) {
   if (c.poison   > 0) parts.push(`☠ ${c.poison}t`);
 
   document.getElementById("logBox").innerHTML =
-    `<b>${c.name}</b> oynadıldı — ${parts.join(", ")||"effekt yoxdur"}`;
+    `<b>${c.name}</b> tətbiq edildi - ${parts.join(", ")||"effekt yoxdur"}`;
   showHPPop(Math.floor(dAI), false);
 }
 
-/* AI kartının effektini tətbiq et (tur sonunda) */
 function applyCardEffect(playerCard, aiC) {
   let aAtk = aiC.atk * (1 + aBuffNext); aBuffNext = 0;
   if (Math.random() < aiC.crit) aAtk *= 1.5;
@@ -835,28 +819,25 @@ function applyCardEffect(playerCard, aiC) {
 function flashLog(msg) {
   const l = document.getElementById("logBox");
   l.innerHTML = `<span style="color:#f0997b">${msg}</span>`;
-  setTimeout(() => { if (l.textContent.includes(msg.replace(/<[^>]+>/g,""))) l.innerHTML = "Kart seçin!"; }, 1300);
+  setTimeout(() => { if (l.textContent.includes(msg.replace(/<[^>]+>/g,""))) l.innerHTML = "Kart seçin! Növbəyə almaq üçün klikləyin."; }, 1300);
 }
 
-/* ═══════════════════════════════════════════════════
-   AI — enerjiyə görə kart seçir
-═══════════════════════════════════════════════════ */
-function aiChooseWithCost(availEnergy) {
-  const pool = shuffle(ALL_CARDS).filter(c => c.cost <= availEnergy);
+/* AI LOGIC */
+function aiChooseFromHand(availEnergy) {
+  // Yalnız rəqibin əlindəki 4 karta baxır və onlardan uyğununu seçir
+  const pool = aiHand.filter(c => c.cost <= availEnergy);
   if (!pool.length) return null;
+  
   if (aHP < 25) { const h = pool.find(c => c.type === "heal");   if (h) return h; }
   if (aHP < 45) { const s = pool.find(c => c.type === "shield"); if (s) return s; }
   if (turn > 7)  return pool.sort((a,b) => b.atk - a.atk)[0];
+  
   return pool.sort((a,b) =>
     (b.atk + b.shd*.5 + b.heal*.3) - (a.atk + a.shd*.5 + a.heal*.3)
   )[0];
 }
 
-function aiChoose() { return aiChooseWithCost(10); }
-
-/* ═══════════════════════════════════════════════════
-   END CHECK
-═══════════════════════════════════════════════════ */
+/* END CHECK */
 function checkEnd() {
   if (pHP > 0 && aHP > 0) return;
   setTimeout(() => {
@@ -874,9 +855,7 @@ function checkEnd() {
   }, 420);
 }
 
-/* ═══════════════════════════════════════════════════
-   RENDER — BATTLE
-═══════════════════════════════════════════════════ */
+/* RENDER BATTLE */
 function renderBattle() {
   const ph = Math.max(0, Math.floor(pHP));
   const ah = Math.max(0, Math.floor(aHP));
@@ -887,7 +866,6 @@ function renderBattle() {
   document.getElementById("turnBadge").textContent = "Tur " + turn;
   document.getElementById("turnTxt").textContent   = "Tur " + turn;
 
-  /* enerji pips */
   const pipsEl = document.getElementById("pips");
   pipsEl.innerHTML = "";
   for (let i = 0; i < 10; i++) {
@@ -927,7 +905,7 @@ function renderHand() {
 function renderPlayedRow() {
   const list = document.getElementById("playedList");
   if (!playedThisTurn.length) {
-    list.innerHTML = `<span style="color:#555">heç bir kart oynanmadı</span>`;
+    list.innerHTML = `<span style="color:#555">heç bir kart növbəyə alınmayıb</span>`;
     return;
   }
   list.innerHTML = playedThisTurn.map(n =>
@@ -935,9 +913,7 @@ function renderPlayedRow() {
   ).join(" ");
 }
 
-/* ═══════════════════════════════════════════════════
-   DAMAGE POP
-═══════════════════════════════════════════════════ */
+/* DAMAGE POP */
 function showHPPop(dmg, isPlayer) {
   if (!dmg) return;
   const el    = document.getElementById(isPlayer ? "pHP" : "aHP");
@@ -955,9 +931,7 @@ function showHPPop(dmg, isPlayer) {
   setTimeout(() => d.remove(), 720);
 }
 
-/* ═══════════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════════ */
+/* INIT */
 renderDeckBuilder();
 </script>
 </body>
