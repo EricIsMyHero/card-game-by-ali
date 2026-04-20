@@ -1,0 +1,264 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+#game{padding:12px;max-width:700px;margin:0 auto}
+.hud{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:12px}
+.hp-block{display:flex;flex-direction:column;gap:4px}
+.hp-label{font-size:11px;color:var(--color-text-secondary);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+.hp-bar-bg{height:10px;border-radius:5px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);overflow:hidden}
+.hp-bar{height:100%;border-radius:5px;transition:width .4s ease}
+.hp-val{font-size:15px;font-weight:500;color:var(--color-text-primary)}
+.vs-badge{font-size:13px;font-weight:500;color:var(--color-text-secondary);text-align:center;padding:4px 10px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-secondary)}
+.energy-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary)}
+.energy-label{font-size:12px;color:var(--color-text-secondary);min-width:60px}
+.energy-pips{display:flex;gap:3px;flex:1}
+.pip{width:18px;height:8px;border-radius:3px;background:var(--color-border-tertiary);transition:background .2s}
+.pip.filled{background:#EF9F27}
+.turn-info{font-size:12px;color:var(--color-text-secondary);text-align:right;min-width:70px}
+.hand-label{font-size:11px;color:var(--color-text-secondary);font-weight:500;letter-spacing:.05em;margin-bottom:6px}
+.hand{display:flex;gap:7px;flex-wrap:wrap;min-height:110px;margin-bottom:10px}
+.card{width:105px;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:8px 8px 7px;cursor:pointer;transition:transform .12s,border-color .12s;position:relative;display:flex;flex-direction:column;gap:3px}
+.card:hover:not(.disabled){transform:translateY(-4px);border-color:#378ADD}
+.card.disabled{opacity:.4;cursor:default}
+.card.played{animation:playAnim .3s ease forwards}
+@keyframes playAnim{0%{transform:scale(1)}50%{transform:scale(1.12)}100%{transform:scale(0.8);opacity:0}}
+.card-type{font-size:9px;font-weight:500;letter-spacing:.06em;padding:2px 5px;border-radius:3px;align-self:flex-start}
+.type-attack{background:#FAECE7;color:#993C1D}
+.type-heal{background:#EAF3DE;color:#3B6D11}
+.type-shield{background:#E6F1FB;color:#185FA5}
+.type-buff{background:#EEEDFE;color:#534AB7}
+.type-debuff{background:#FAEEDA;color:#854F0B}
+.type-poison{background:#F1EFE8;color:#5F5E5A}
+.card-name{font-size:11px;font-weight:500;color:var(--color-text-primary)}
+.card-stats{display:flex;flex-direction:column;gap:1px;margin-top:2px}
+.card-stat{font-size:10px;color:var(--color-text-secondary);display:flex;justify-content:space-between}
+.card-stat span:last-child{color:var(--color-text-primary);font-weight:500}
+.card-cost{position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;background:#378ADD;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.cost-unaffordable .card-cost{background:#888780}
+.cost-unaffordable{opacity:.55;cursor:not-allowed}
+.cost-unaffordable:hover{transform:none!important;border-color:var(--color-border-secondary)!important}
+.ai-area{padding:8px 12px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);margin-bottom:10px;min-height:36px}
+.ai-label{font-size:10px;color:var(--color-text-secondary);letter-spacing:.05em;margin-bottom:4px}
+.log-area{min-height:36px;padding:8px 12px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);font-size:13px;color:var(--color-text-primary);line-height:1.5;margin-bottom:8px}
+.damage-pop{position:fixed;font-size:16px;font-weight:700;pointer-events:none;animation:popUp .7s ease forwards;z-index:999}
+@keyframes popUp{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-40px);opacity:0}}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+button.action{padding:6px 14px;font-size:13px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);border-radius:var(--border-radius-md);cursor:pointer}
+button.action:hover{background:var(--color-background-secondary)}
+.status-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.badge{font-size:10px;padding:2px 7px;border-radius:10px;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary)}
+.badge.active{background:#E1F5EE;color:#0F6E56;border-color:#5DCAA5}
+</style>
+<div id="game">
+  <h2 class="sr-only">Card Battle Game - Clash Royale stilini kart oyunu</h2>
+  <div class="hud">
+    <div class="hp-block">
+      <div class="hp-label">Sən</div>
+      <div class="hp-bar-bg"><div class="hp-bar" id="pBar" style="background:#1D9E75;width:100%"></div></div>
+      <div class="hp-val" id="pHP">100</div>
+    </div>
+    <div class="vs-badge">VS</div>
+    <div class="hp-block" style="text-align:right">
+      <div class="hp-label" style="text-align:right">AI</div>
+      <div class="hp-bar-bg"><div class="hp-bar" id="aBar" style="background:#D85A30;width:100%"></div></div>
+      <div class="hp-val" id="aHP">100</div>
+    </div>
+  </div>
+  <div class="energy-row">
+    <div class="energy-label">Enerji</div>
+    <div class="energy-pips" id="pips"></div>
+    <div class="turn-info" id="turnInfo">Tur 1</div>
+  </div>
+  <div class="status-bar" id="statusBar"></div>
+  <div class="hand-label">ƏLİNDƏKİ KARTLAR</div>
+  <div class="hand" id="hand"></div>
+  <div class="ai-area">
+    <div class="ai-label">AI OYNADIKLAŞI</div>
+    <div id="aiCard">—</div>
+  </div>
+  <div class="log-area" id="log">Kart seç və döyüşə başla!</div>
+  <div class="btn-row">
+    <button class="action" onclick="nextTurn()">Növbəti Tur →</button>
+    <button class="action" onclick="startGame()">Yenidən Başla</button>
+  </div>
+</div>
+<script>
+const ALL_CARDS = [
+  {name:"Qılınc Zərbəsi",type:"attack",cost:2,atk:18,shd:0,heal:0,crit:.2,poison:0,buffNext:0,debuff:0},
+  {name:"Dual Hücum",type:"attack",cost:4,atk:30,shd:0,heal:0,crit:.25,poison:0,buffNext:0,debuff:0},
+  {name:"Oxçu",type:"attack",cost:1,atk:10,shd:0,heal:0,crit:.15,poison:0,buffNext:0,debuff:0},
+  {name:"Snayper",type:"attack",cost:3,atk:22,shd:0,heal:0,crit:.35,poison:0,buffNext:0,debuff:0},
+  {name:"Həyat Seli",type:"heal",cost:2,atk:0,shd:0,heal:20,crit:0,poison:0,buffNext:0,debuff:0},
+  {name:"Sürətli Şəfa",type:"heal",cost:1,atk:0,shd:0,heal:12,crit:0,poison:0,buffNext:0,debuff:0},
+  {name:"Böyük Şəfa",type:"heal",cost:4,atk:0,shd:0,heal:35,crit:0,poison:0,buffNext:0,debuff:0},
+  {name:"Qalxan",type:"shield",cost:2,atk:5,shd:18,heal:0,crit:.1,poison:0,buffNext:0,debuff:0},
+  {name:"Dəmir Zireh",type:"shield",cost:3,atk:0,shd:28,heal:0,crit:0,poison:0,buffNext:0,debuff:0},
+  {name:"Güc Ruhu",type:"buff",cost:2,atk:8,shd:5,heal:5,crit:.1,poison:0,buffNext:.3,debuff:0},
+  {name:"Bərk Yumruq",type:"buff",cost:3,atk:15,shd:0,heal:0,crit:.1,poison:0,buffNext:.5,debuff:0},
+  {name:"Zəhərli Ox",type:"poison",cost:2,atk:8,shd:0,heal:0,crit:.15,poison:6,buffNext:0,debuff:0},
+  {name:"Zəhər Buludu",type:"poison",cost:3,atk:5,shd:0,heal:0,crit:.1,poison:10,buffNext:0,debuff:0},
+  {name:"Zəiflik",type:"debuff",cost:2,atk:5,shd:0,heal:0,crit:.1,poison:0,buffNext:0,debuff:.25},
+  {name:"Qaranlıq Bağ",type:"debuff",cost:3,atk:8,shd:0,heal:0,crit:.1,poison:0,buffNext:0,debuff:.4},
+  {name:"Döyüşçü",type:"attack",cost:2,atk:14,shd:6,heal:0,crit:.2,poison:0,buffNext:0,debuff:0},
+  {name:"Büyücü",type:"buff",cost:4,atk:12,shd:8,heal:8,crit:.15,poison:3,buffNext:.2,debuff:.1},
+  {name:"Ninja",type:"attack",cost:3,atk:25,shd:0,heal:0,crit:.4,poison:0,buffNext:0,debuff:0},
+  {name:"Healer",type:"heal",cost:3,atk:5,shd:5,heal:18,crit:.1,poison:0,buffNext:0,debuff:0},
+  {name:"Titan",type:"shield",cost:5,atk:20,shd:35,heal:0,crit:.15,poison:0,buffNext:0,debuff:0}
+];
+let pHP,aHP,energy,maxEnergy,turn,playerDeck,handCards,deckIndex;
+let aiPoison,pPoison,pDebuff,aDebuff,pBuffNext,aBuffNext;
+let aiPoisonDmg,pPoisonDmg;
+function shuffle(a){let b=[...a];for(let i=b.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
+function startGame(){
+  pHP=100;aHP=100;energy=3;maxEnergy=3;turn=1;
+  aiPoison=0;pPoison=0;pDebuff=0;aDebuff=0;pBuffNext=0;aBuffNext=0;
+  aiPoisonDmg=0;pPoisonDmg=0;
+  playerDeck=shuffle(ALL_CARDS);deckIndex=0;handCards=[];
+  drawCards(4);renderAll();
+  document.getElementById("log").textContent="Kart seç və döyüşə başla!";
+  document.getElementById("aiCard").textContent="—";
+}
+function drawCards(n){
+  for(let i=0;i<n;i++){
+    if(deckIndex<playerDeck.length)handCards.push({...playerDeck[deckIndex++]});
+    else{playerDeck=shuffle(ALL_CARDS);deckIndex=0;handCards.push({...playerDeck[deckIndex++]});}
+  }
+}
+function nextTurn(){
+  if(pHP<=0||aHP<=0)return;
+  turn++;energy=Math.min(10,energy+1+Math.floor(turn/4));maxEnergy=Math.min(10,maxEnergy+Math.floor(turn/4));
+  if(pPoison>0){pHP-=pPoisonDmg;pPoison--;if(pPoison===0)pPoisonDmg=0;}
+  if(aiPoison>0){aHP-=aiPoisonDmg;aiPoison--;if(aiPoison===0)aiPoisonDmg=0;}
+  drawCards(1);
+  let logs=[];
+  if(pPoison>0)logs.push(`Sən: ${pPoisonDmg} zəhər zərəri (${pPoison} tur qalıb)`);
+  if(aiPoison>0)logs.push(`AI: ${aiPoisonDmg} zəhər zərəri (${aiPoison} tur qalıb)`);
+  document.getElementById("log").textContent=logs.length?logs.join(" | "):`Tur ${turn} — yeni kart gəldi!`;
+  document.getElementById("aiCard").textContent="—";
+  checkEnd();renderAll();
+}
+function playCard(idx){
+  const c=handCards[idx];
+  if(c.cost>energy){showPop("Enerji az!",document.getElementById("hand").children[idx],-1);return;}
+  if(pHP<=0||aHP<=0)return;
+  energy-=c.cost;
+  const aiC=aiChoose();
+  let pAtk=c.atk*(1+pBuffNext);pBuffNext=0;
+  let aAtk=aiC.atk*(1+aBuffNext);aBuffNext=0;
+  if(Math.random()<c.crit)pAtk*=1.5;
+  if(Math.random()<aiC.crit)aAtk*=1.5;
+  aAtk*=(1-pDebuff);pDebuff=0;
+  pAtk*=(1-aDebuff);aDebuff=0;
+  let shieldBlockA=Math.min(aiC.shd,pAtk*0.6);
+  let shieldBlockP=Math.min(c.shd,aAtk*0.6);
+  let dmgToAI=Math.max(0,pAtk-shieldBlockA);
+  let dmgToP=Math.max(0,aAtk-shieldBlockP);
+  aHP+=aiC.heal;pHP+=c.heal;
+  aHP-=dmgToAI;pHP-=dmgToP;
+  if(c.poison>0){pPoison=c.poison;pPoisonDmg=c.poison;aiPoison+=c.poison;aiPoisonDmg=Math.max(aiPoisonDmg,c.poison);}
+  if(aiC.poison>0){aiPoison=aiC.poison;aiPoisonDmg=aiC.poison;pPoison+=aiC.poison;pPoisonDmg=Math.max(pPoisonDmg,aiC.poison);}
+  if(c.buffNext>0)pBuffNext=c.buffNext;
+  if(aiC.buffNext>0)aBuffNext=aiC.buffNext;
+  if(c.debuff>0)aDebuff=c.debuff;
+  if(aiC.debuff>0)pDebuff=aiC.debuff;
+  let logParts=[];
+  if(dmgToAI>0)logParts.push(`AI-ə ${Math.floor(dmgToAI)} zərər`);
+  if(c.heal>0)logParts.push(`+${c.heal} HP`);
+  if(dmgToP>0)logParts.push(`Sənə ${Math.floor(dmgToP)} zərər`);
+  if(aiC.heal>0)logParts.push(`AI +${aiC.heal} HP`);
+  document.getElementById("log").textContent=`${c.name} vs ${aiC.name} | ${logParts.join(", ")}`;
+  document.getElementById("aiCard").textContent=`${aiC.name} (Cost:${aiC.cost}, ATK:${aiC.atk}, SHD:${aiC.shd}, HEAL:${aiC.heal})`;
+  showPop(`-${Math.floor(dmgToAI)}`,document.getElementById("aHP"),1);
+  showPop(`-${Math.floor(dmgToP)}`,document.getElementById("pHP"),-1);
+  handCards.splice(idx,1);drawCards(1);
+  checkEnd();renderAll();
+}
+function aiChoose(){
+  let hand=[...ALL_CARDS].sort(()=>Math.random()-.5).slice(0,4);
+  if(aHP<25){let h=hand.find(c=>c.type==='heal');if(h)return h;}
+  if(aHP<40){let s=hand.find(c=>c.type==='shield');if(s)return s;}
+  if(turn>6){return hand.sort((a,b)=>b.atk-a.atk)[0];}
+  return hand.sort((a,b)=>(b.atk+b.shd*0.5+b.heal*0.3)-(a.atk+a.shd*0.5+a.heal*0.3))[0];
+}
+function showPop(txt,el,dir){
+  if(!el)return;
+  const r=el.getBoundingClientRect();
+  const d=document.createElement("div");
+  d.className="damage-pop";
+  d.style.left=r.left+r.width/2-15+"px";
+  d.style.top=r.top+window.scrollY+(dir<0?-10:10)+"px";
+  d.style.color=txt.startsWith("-")?"#D85A30":"#1D9E75";
+  d.textContent=txt;
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(),700);
+}
+function checkEnd(){
+  if(pHP<=0||aHP<=0||handCards.length===0){
+    let msg="";
+    if(pHP<=0&&aHP<=0)msg="Bərabərə!";
+    else if(pHP<=0)msg="Uduzudun! AI qalib gəldi.";
+    else if(aHP<=0)msg="Qazandın! AI məğlub oldu!";
+    else msg=pHP>aHP?"Kart qurtardı — HP üstünlüyünə görə qazandın!":"Kart qurtardı — AI qalib!";
+    document.getElementById("log").textContent=msg;
+    document.getElementById("hand").innerHTML=`<div style="padding:12px;color:var(--color-text-secondary);font-size:13px">${msg}</div>`;
+  }
+}
+function renderAll(){
+  renderHUD();renderEnergy();renderHand();renderStatus();
+}
+function renderHUD(){
+  let ph=Math.max(0,Math.floor(pHP)),ah=Math.max(0,Math.floor(aHP));
+  document.getElementById("pHP").textContent=ph;
+  document.getElementById("aHP").textContent=ah;
+  document.getElementById("pBar").style.width=Math.max(0,ph)+'%';
+  document.getElementById("aBar").style.width=Math.max(0,ah)+'%';
+  document.getElementById("turnInfo").textContent=`Tur ${turn}`;
+}
+function renderEnergy(){
+  const pip=document.getElementById("pips");pip.innerHTML="";
+  for(let i=0;i<10;i++){
+    const d=document.createElement("div");
+    d.className="pip"+(i<energy?" filled":"");
+    pip.appendChild(d);
+  }
+}
+function renderStatus(){
+  const sb=document.getElementById("statusBar");sb.innerHTML="";
+  const items=[
+    pPoison>0?`Zəhər (${pPoison} tur)`:null,
+    pDebuff>0?`Zəiflədilmisən`:null,
+    pBuffNext>0?`Növbəti zərbə ${Math.round(pBuffNext*100)}% güclü`:null,
+  ].filter(Boolean);
+  items.forEach(t=>{
+    const b=document.createElement("div");
+    b.className="badge active";b.textContent=t;sb.appendChild(b);
+  });
+}
+const typeColors={attack:"type-attack",heal:"type-heal",shield:"type-shield",buff:"type-buff",debuff:"type-debuff",poison:"type-poison"};
+function renderHand(){
+  if(pHP<=0||aHP<=0)return;
+  const h=document.getElementById("hand");h.innerHTML="";
+  handCards.forEach((c,i)=>{
+    const affordable=c.cost<=energy;
+    const div=document.createElement("div");
+    div.className="card"+(affordable?"":" cost-unaffordable");
+    div.innerHTML=`
+      <div class="card-cost">${c.cost}</div>
+      <div class="card-type ${typeColors[c.type]||''}">${c.type.toUpperCase()}</div>
+      <div class="card-name">${c.name}</div>
+      <div class="card-stats">
+        ${c.atk>0?`<div class="card-stat"><span>ATK</span><span>${c.atk}</span></div>`:""}
+        ${c.shd>0?`<div class="card-stat"><span>SHD</span><span>${c.shd}</span></div>`:""}
+        ${c.heal>0?`<div class="card-stat"><span>HEAL</span><span>+${c.heal}</span></div>`:""}
+        ${c.crit>0?`<div class="card-stat"><span>CRIT</span><span>${Math.round(c.crit*100)}%</span></div>`:""}
+        ${c.poison>0?`<div class="card-stat"><span>ZHR</span><span>${c.poison}t</span></div>`:""}
+        ${c.buffNext>0?`<div class="card-stat"><span>BUFF</span><span>+${Math.round(c.buffNext*100)}%</span></div>`:""}
+        ${c.debuff>0?`<div class="card-stat"><span>DEB</span><span>-${Math.round(c.debuff*100)}%</span></div>`:""}
+      </div>`;
+    if(affordable)div.onclick=()=>playCard(i);
+    h.appendChild(div);
+  });
+}
+startGame();
+</script>
